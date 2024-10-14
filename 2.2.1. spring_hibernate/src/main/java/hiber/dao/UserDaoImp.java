@@ -22,16 +22,29 @@ public class UserDaoImp implements UserDao {
    @Override
    @SuppressWarnings("unchecked")
    public List<User> listUsers() {
-      TypedQuery<User> query=sessionFactory.getCurrentSession().createQuery("from User");
+      javax.persistence.EntityManager em = sessionFactory.getCurrentSession().getEntityManagerFactory().createEntityManager();
+      javax.persistence.EntityGraph<?> entityGraph = em.createEntityGraph(User.class);
+      entityGraph.addAttributeNodes("car");
+
+      TypedQuery<User> query = em.createQuery("from User", User.class);
+      query.setHint("javax.persistence.fetchgraph", entityGraph);
+
       return query.getResultList();
    }
 
    @Override
    @SuppressWarnings("unchecked")
    public User getUserByCar(String model, int series) {
-      String hql = "from User user where user.car.model = :model and user.car.series = :series";
-      TypedQuery<User> query = sessionFactory.getCurrentSession().createQuery(hql);
-      query.setParameter("model", model).setParameter("series", series);
+      javax.persistence.EntityManager em = sessionFactory.getCurrentSession().getEntityManagerFactory().createEntityManager();
+      javax.persistence.EntityGraph<?> entityGraph = em.createEntityGraph(User.class);
+      entityGraph.addAttributeNodes("car");
+
+      String jpql = "from User u where u.car.model = :model and u.car.series = :series";
+      TypedQuery<User> query = em.createQuery(jpql, User.class);
+      query.setParameter("model", model);
+      query.setParameter("series", series);
+      query.setHint("javax.persistence.fetchgraph", entityGraph);
+
       return query.setMaxResults(1).getSingleResult();
    }
 
